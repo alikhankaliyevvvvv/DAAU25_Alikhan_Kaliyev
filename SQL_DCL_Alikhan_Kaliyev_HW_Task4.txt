@@ -1,0 +1,11 @@
+How can one restrict access to certain columns of a database table?
+Answer: First method is to create VIEW with only allowed columns, and give permission only for the view, not the whole table. Second method is to use column-level privileges, but they work only for SELECT and UPDATE
+
+What is the difference between user identification and user authentication?
+Answer: identification is the user's name, e.g. i am - client_bob, authentication is the process of making sure that he is bob by asking his password on the enter
+
+What are the recommended authentication protocols for PostgreSQL?
+Answer: SCRAM-SHA-256 - recommended standard for passwords. TLS/SSL - for network connections
+
+What is proxy authentication in PostgreSQL and what is it for? Why does it make role-based access control easier?
+Answer: Proxy authentication is when while being super user you can do script as user from some created role without making new connection and testing it in another session, that is how it make role-based access control easier. Also each user dont have to have certain login and password, but can join as some predescribed role using SET ROLE

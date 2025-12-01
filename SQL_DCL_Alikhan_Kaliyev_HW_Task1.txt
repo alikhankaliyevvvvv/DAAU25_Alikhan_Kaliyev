@@ -1,0 +1,504 @@
+1) Existing users and roles (Can be looked below, in the SCRIPT + OUTPUT PART). Generally, postgres - super user, other roles are built-in roles, nothing special for dvdrental exactly
+
+2) Every table have:
+GRANT ALL ON TABLE <table> TO postgres;
+Other roles dont have any privileges
+Thus, postgres have full
+
+3) Row-level security(RLS) policies:
+All tables have: relrowsecurity = false
+relforcerowsecurity = false
+thus, no any RLS
+
+4) Policies are empty too
+
+5) Connection limits is -1, no limits
+
+6) No default privileges
+
+7) Authentication method using password by default, set on server level, thus unviewable from SQL Script.
+
+
+---------------SCRIPT + OUTPUT PART------------------------------------
+
+--To list existing roles:
+SELECT rolname, rolsuper, rolcanlogin, rolcreaterole, rolcreatedb
+FROM pg_roles;
+
+<?php
+$SELECT rolname, rolsuper, rolcanlogin, rolcreaterole, rolcreatedb
+FROM pg_roles = array(
+	array(
+		"rolname" => "pg_database_owner",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_read_all_data",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_write_all_data",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_monitor",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_read_all_settings",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_read_all_stats",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_stat_scan_tables",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_read_server_files",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_write_server_files",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_execute_server_program",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_signal_backend",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_checkpoint",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_maintain",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_use_reserved_connections",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_create_subscription",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "pg_signal_autovacuum_worker",
+		"rolsuper" => false,
+		"rolcanlogin" => false,
+		"rolcreaterole" => false,
+		"rolcreatedb" => false
+	),
+	array(
+		"rolname" => "postgres",
+		"rolsuper" => true,
+		"rolcanlogin" => true,
+		"rolcreaterole" => true,
+		"rolcreatedb" => true
+	)
+);
+?>
+
+
+
+--to check table level privileges:
+SELECT table_schema,
+       table_name,
+       privilege_type,
+       grantee
+FROM information_schema.table_privileges
+WHERE table_schema = 'public'
+ORDER BY table_name, grantee;
+
+|table_schema|table_name                   |privilege_type|grantee |
+|------------|-----------------------------|--------------|--------|
+|public      |actor                        |INSERT        |postgres|
+|public      |actor                        |TRIGGER       |postgres|
+|public      |actor                        |REFERENCES    |postgres|
+|public      |actor                        |TRUNCATE      |postgres|
+|public      |actor                        |DELETE        |postgres|
+|public      |actor                        |UPDATE        |postgres|
+|public      |actor                        |SELECT        |postgres|
+|public      |actor_info                   |SELECT        |postgres|
+|public      |actor_info                   |INSERT        |postgres|
+|public      |actor_info                   |TRIGGER       |postgres|
+|public      |actor_info                   |REFERENCES    |postgres|
+|public      |actor_info                   |TRUNCATE      |postgres|
+|public      |actor_info                   |DELETE        |postgres|
+|public      |actor_info                   |UPDATE        |postgres|
+|public      |address                      |INSERT        |postgres|
+|public      |address                      |SELECT        |postgres|
+|public      |address                      |UPDATE        |postgres|
+|public      |address                      |DELETE        |postgres|
+|public      |address                      |TRUNCATE      |postgres|
+|public      |address                      |REFERENCES    |postgres|
+|public      |address                      |TRIGGER       |postgres|
+|public      |category                     |TRIGGER       |postgres|
+|public      |category                     |INSERT        |postgres|
+|public      |category                     |SELECT        |postgres|
+|public      |category                     |UPDATE        |postgres|
+|public      |category                     |DELETE        |postgres|
+|public      |category                     |TRUNCATE      |postgres|
+|public      |category                     |REFERENCES    |postgres|
+|public      |city                         |INSERT        |postgres|
+|public      |city                         |TRIGGER       |postgres|
+|public      |city                         |REFERENCES    |postgres|
+|public      |city                         |TRUNCATE      |postgres|
+|public      |city                         |DELETE        |postgres|
+|public      |city                         |UPDATE        |postgres|
+|public      |city                         |SELECT        |postgres|
+|public      |country                      |INSERT        |postgres|
+|public      |country                      |SELECT        |postgres|
+|public      |country                      |UPDATE        |postgres|
+|public      |country                      |DELETE        |postgres|
+|public      |country                      |TRUNCATE      |postgres|
+|public      |country                      |REFERENCES    |postgres|
+|public      |country                      |TRIGGER       |postgres|
+|public      |customer                     |INSERT        |postgres|
+|public      |customer                     |SELECT        |postgres|
+|public      |customer                     |UPDATE        |postgres|
+|public      |customer                     |DELETE        |postgres|
+|public      |customer                     |TRUNCATE      |postgres|
+|public      |customer                     |REFERENCES    |postgres|
+|public      |customer                     |TRIGGER       |postgres|
+|public      |customer_list                |INSERT        |postgres|
+|public      |customer_list                |TRIGGER       |postgres|
+|public      |customer_list                |REFERENCES    |postgres|
+|public      |customer_list                |TRUNCATE      |postgres|
+|public      |customer_list                |DELETE        |postgres|
+|public      |customer_list                |UPDATE        |postgres|
+|public      |customer_list                |SELECT        |postgres|
+|public      |film                         |INSERT        |postgres|
+|public      |film                         |TRIGGER       |postgres|
+|public      |film                         |REFERENCES    |postgres|
+|public      |film                         |TRUNCATE      |postgres|
+|public      |film                         |DELETE        |postgres|
+|public      |film                         |UPDATE        |postgres|
+|public      |film                         |SELECT        |postgres|
+|public      |film_actor                   |SELECT        |postgres|
+|public      |film_actor                   |INSERT        |postgres|
+|public      |film_actor                   |TRIGGER       |postgres|
+|public      |film_actor                   |REFERENCES    |postgres|
+|public      |film_actor                   |TRUNCATE      |postgres|
+|public      |film_actor                   |DELETE        |postgres|
+|public      |film_actor                   |UPDATE        |postgres|
+|public      |film_category                |INSERT        |postgres|
+|public      |film_category                |SELECT        |postgres|
+|public      |film_category                |UPDATE        |postgres|
+|public      |film_category                |DELETE        |postgres|
+|public      |film_category                |TRUNCATE      |postgres|
+|public      |film_category                |REFERENCES    |postgres|
+|public      |film_category                |TRIGGER       |postgres|
+|public      |film_list                    |TRIGGER       |postgres|
+|public      |film_list                    |REFERENCES    |postgres|
+|public      |film_list                    |TRUNCATE      |postgres|
+|public      |film_list                    |DELETE        |postgres|
+|public      |film_list                    |UPDATE        |postgres|
+|public      |film_list                    |SELECT        |postgres|
+|public      |film_list                    |INSERT        |postgres|
+|public      |inventory                    |INSERT        |postgres|
+|public      |inventory                    |SELECT        |postgres|
+|public      |inventory                    |UPDATE        |postgres|
+|public      |inventory                    |DELETE        |postgres|
+|public      |inventory                    |TRUNCATE      |postgres|
+|public      |inventory                    |REFERENCES    |postgres|
+|public      |inventory                    |TRIGGER       |postgres|
+|public      |language                     |INSERT        |postgres|
+|public      |language                     |TRIGGER       |postgres|
+|public      |language                     |REFERENCES    |postgres|
+|public      |language                     |TRUNCATE      |postgres|
+|public      |language                     |DELETE        |postgres|
+|public      |language                     |UPDATE        |postgres|
+|public      |language                     |SELECT        |postgres|
+|public      |nicer_but_slower_film_list   |TRIGGER       |postgres|
+|public      |nicer_but_slower_film_list   |INSERT        |postgres|
+|public      |nicer_but_slower_film_list   |SELECT        |postgres|
+|public      |nicer_but_slower_film_list   |UPDATE        |postgres|
+|public      |nicer_but_slower_film_list   |DELETE        |postgres|
+|public      |nicer_but_slower_film_list   |TRUNCATE      |postgres|
+|public      |nicer_but_slower_film_list   |REFERENCES    |postgres|
+|public      |payment                      |INSERT        |postgres|
+|public      |payment                      |TRIGGER       |postgres|
+|public      |payment                      |REFERENCES    |postgres|
+|public      |payment                      |TRUNCATE      |postgres|
+|public      |payment                      |DELETE        |postgres|
+|public      |payment                      |UPDATE        |postgres|
+|public      |payment                      |SELECT        |postgres|
+|public      |payment_p2017_01             |SELECT        |postgres|
+|public      |payment_p2017_01             |TRIGGER       |postgres|
+|public      |payment_p2017_01             |REFERENCES    |postgres|
+|public      |payment_p2017_01             |TRUNCATE      |postgres|
+|public      |payment_p2017_01             |DELETE        |postgres|
+|public      |payment_p2017_01             |UPDATE        |postgres|
+|public      |payment_p2017_01             |INSERT        |postgres|
+|public      |payment_p2017_02             |INSERT        |postgres|
+|public      |payment_p2017_02             |TRIGGER       |postgres|
+|public      |payment_p2017_02             |REFERENCES    |postgres|
+|public      |payment_p2017_02             |TRUNCATE      |postgres|
+|public      |payment_p2017_02             |DELETE        |postgres|
+|public      |payment_p2017_02             |UPDATE        |postgres|
+|public      |payment_p2017_02             |SELECT        |postgres|
+|public      |payment_p2017_03             |TRIGGER       |postgres|
+|public      |payment_p2017_03             |INSERT        |postgres|
+|public      |payment_p2017_03             |SELECT        |postgres|
+|public      |payment_p2017_03             |UPDATE        |postgres|
+|public      |payment_p2017_03             |DELETE        |postgres|
+|public      |payment_p2017_03             |TRUNCATE      |postgres|
+|public      |payment_p2017_03             |REFERENCES    |postgres|
+|public      |payment_p2017_04             |INSERT        |postgres|
+|public      |payment_p2017_04             |TRIGGER       |postgres|
+|public      |payment_p2017_04             |REFERENCES    |postgres|
+|public      |payment_p2017_04             |TRUNCATE      |postgres|
+|public      |payment_p2017_04             |DELETE        |postgres|
+|public      |payment_p2017_04             |UPDATE        |postgres|
+|public      |payment_p2017_04             |SELECT        |postgres|
+|public      |payment_p2017_05             |SELECT        |postgres|
+|public      |payment_p2017_05             |TRIGGER       |postgres|
+|public      |payment_p2017_05             |REFERENCES    |postgres|
+|public      |payment_p2017_05             |TRUNCATE      |postgres|
+|public      |payment_p2017_05             |DELETE        |postgres|
+|public      |payment_p2017_05             |UPDATE        |postgres|
+|public      |payment_p2017_05             |INSERT        |postgres|
+|public      |payment_p2017_06             |SELECT        |postgres|
+|public      |payment_p2017_06             |INSERT        |postgres|
+|public      |payment_p2017_06             |UPDATE        |postgres|
+|public      |payment_p2017_06             |DELETE        |postgres|
+|public      |payment_p2017_06             |TRUNCATE      |postgres|
+|public      |payment_p2017_06             |REFERENCES    |postgres|
+|public      |payment_p2017_06             |TRIGGER       |postgres|
+|public      |rental                       |INSERT        |postgres|
+|public      |rental                       |TRIGGER       |postgres|
+|public      |rental                       |REFERENCES    |postgres|
+|public      |rental                       |TRUNCATE      |postgres|
+|public      |rental                       |DELETE        |postgres|
+|public      |rental                       |UPDATE        |postgres|
+|public      |rental                       |SELECT        |postgres|
+|public      |sales_by_film_category       |REFERENCES    |postgres|
+|public      |sales_by_film_category       |INSERT        |postgres|
+|public      |sales_by_film_category       |SELECT        |postgres|
+|public      |sales_by_film_category       |UPDATE        |postgres|
+|public      |sales_by_film_category       |DELETE        |postgres|
+|public      |sales_by_film_category       |TRUNCATE      |postgres|
+|public      |sales_by_film_category       |TRIGGER       |postgres|
+|public      |sales_by_store               |SELECT        |postgres|
+|public      |sales_by_store               |TRIGGER       |postgres|
+|public      |sales_by_store               |REFERENCES    |postgres|
+|public      |sales_by_store               |TRUNCATE      |postgres|
+|public      |sales_by_store               |DELETE        |postgres|
+|public      |sales_by_store               |UPDATE        |postgres|
+|public      |sales_by_store               |INSERT        |postgres|
+|public      |sales_revenue_by_category_qtr|INSERT        |postgres|
+|public      |sales_revenue_by_category_qtr|SELECT        |postgres|
+|public      |sales_revenue_by_category_qtr|UPDATE        |postgres|
+|public      |sales_revenue_by_category_qtr|DELETE        |postgres|
+|public      |sales_revenue_by_category_qtr|TRUNCATE      |postgres|
+|public      |sales_revenue_by_category_qtr|REFERENCES    |postgres|
+|public      |sales_revenue_by_category_qtr|TRIGGER       |postgres|
+|public      |staff                        |TRIGGER       |postgres|
+|public      |staff                        |SELECT        |postgres|
+|public      |staff                        |UPDATE        |postgres|
+|public      |staff                        |DELETE        |postgres|
+|public      |staff                        |TRUNCATE      |postgres|
+|public      |staff                        |REFERENCES    |postgres|
+|public      |staff                        |INSERT        |postgres|
+|public      |staff_list                   |TRIGGER       |postgres|
+|public      |staff_list                   |INSERT        |postgres|
+|public      |staff_list                   |SELECT        |postgres|
+|public      |staff_list                   |UPDATE        |postgres|
+|public      |staff_list                   |DELETE        |postgres|
+|public      |staff_list                   |TRUNCATE      |postgres|
+|public      |staff_list                   |REFERENCES    |postgres|
+|public      |store                        |SELECT        |postgres|
+|public      |store                        |TRIGGER       |postgres|
+|public      |store                        |REFERENCES    |postgres|
+|public      |store                        |TRUNCATE      |postgres|
+|public      |store                        |DELETE        |postgres|
+|public      |store                        |UPDATE        |postgres|
+|public      |store                        |INSERT        |postgres|
+
+
+
+--ROW LEVEL SECURITY check:
+SELECT relname,
+       relrowsecurity,
+       relforcerowsecurity
+FROM pg_class
+WHERE relnamespace = 'public'::regnamespace;
+
+|relname                                            |relrowsecurity|relforcerowsecurity|
+|---------------------------------------------------|--------------|-------------------|
+|film_actor                                         |false         |false              |
+|actor_actor_id_seq                                 |false         |false              |
+|address                                            |false         |false              |
+|category_category_id_seq                           |false         |false              |
+|city                                               |false         |false              |
+|film_film_id_seq                                   |false         |false              |
+|actor                                              |false         |false              |
+|actor_info                                         |false         |false              |
+|address_address_id_seq                             |false         |false              |
+|category                                           |false         |false              |
+|city_city_id_seq                                   |false         |false              |
+|country                                            |false         |false              |
+|country_country_id_seq                             |false         |false              |
+|customer                                           |false         |false              |
+|customer_customer_id_seq                           |false         |false              |
+|customer_customer_id_seq1                          |false         |false              |
+|customer_list                                      |false         |false              |
+|film_list                                          |false         |false              |
+|inventory_inventory_id_seq                         |false         |false              |
+|language_language_id_seq                           |false         |false              |
+|nicer_but_slower_film_list                         |false         |false              |
+|payment_payment_id_seq                             |false         |false              |
+|film                                               |false         |false              |
+|film_category                                      |false         |false              |
+|inventory                                          |false         |false              |
+|language                                           |false         |false              |
+|rental_rental_id_seq                               |false         |false              |
+|sales_by_film_category                             |false         |false              |
+|staff_staff_id_seq                                 |false         |false              |
+|store                                              |false         |false              |
+|store_store_id_seq                                 |false         |false              |
+|sales_by_store                                     |false         |false              |
+|staff_list                                         |false         |false              |
+|payment                                            |false         |false              |
+|rental                                             |false         |false              |
+|staff                                              |false         |false              |
+|payment_p2017_02                                   |false         |false              |
+|actor_pkey                                         |false         |false              |
+|address_pkey                                       |false         |false              |
+|category_pkey                                      |false         |false              |
+|city_pkey                                          |false         |false              |
+|country_pkey                                       |false         |false              |
+|customer_pkey                                      |false         |false              |
+|film_actor_pkey                                    |false         |false              |
+|film_category_pkey                                 |false         |false              |
+|film_pkey                                          |false         |false              |
+|inventory_pkey                                     |false         |false              |
+|language_pkey                                      |false         |false              |
+|rental_pkey                                        |false         |false              |
+|staff_pkey                                         |false         |false              |
+|store_pkey                                         |false         |false              |
+|film_fulltext_idx                                  |false         |false              |
+|idx_actor_last_name                                |false         |false              |
+|idx_fk_address_id                                  |false         |false              |
+|idx_fk_city_id                                     |false         |false              |
+|idx_fk_country_id                                  |false         |false              |
+|idx_fk_film_id                                     |false         |false              |
+|payment_p2017_04                                   |false         |false              |
+|payment_p2017_05                                   |false         |false              |
+|idx_fk_inventory_id                                |false         |false              |
+|idx_fk_language_id                                 |false         |false              |
+|idx_fk_original_language_id                        |false         |false              |
+|idx_fk_payment_p2017_01_customer_id                |false         |false              |
+|idx_fk_payment_p2017_02_customer_id                |false         |false              |
+|idx_fk_payment_p2017_03_customer_id                |false         |false              |
+|idx_fk_payment_p2017_04_customer_id                |false         |false              |
+|idx_fk_payment_p2017_05_customer_id                |false         |false              |
+|idx_fk_payment_p2017_06_customer_id                |false         |false              |
+|idx_fk_store_id                                    |false         |false              |
+|idx_last_name                                      |false         |false              |
+|idx_store_id_film_id                               |false         |false              |
+|idx_title                                          |false         |false              |
+|idx_unq_manager_staff_id                           |false         |false              |
+|idx_unq_rental_rental_date_inventory_id_customer_id|false         |false              |
+|idx_fk_staff_id                                    |false         |false              |
+|idx_fk_payment_p2017_01_staff_id                   |false         |false              |
+|idx_fk_payment_p2017_02_staff_id                   |false         |false              |
+|idx_fk_payment_p2017_03_staff_id                   |false         |false              |
+|idx_fk_payment_p2017_04_staff_id                   |false         |false              |
+|idx_fk_payment_p2017_05_staff_id                   |false         |false              |
+|idx_fk_payment_p2017_06_staff_id                   |false         |false              |
+|idx_fk_customer_id                                 |false         |false              |
+|payment_p2017_01_customer_id_idx                   |false         |false              |
+|payment_p2017_02_customer_id_idx                   |false         |false              |
+|payment_p2017_03_customer_id_idx                   |false         |false              |
+|payment_p2017_04_customer_id_idx                   |false         |false              |
+|payment_p2017_05_customer_id_idx                   |false         |false              |
+|payment_p2017_06_customer_id_idx                   |false         |false              |
+|payment_p2017_01                                   |false         |false              |
+|payment_p2017_03                                   |false         |false              |
+|payment_p2017_06                                   |false         |false              |
+|sales_revenue_by_category_qtr                      |false         |false              |
+
+
+
+--Policies check:
+SELECT *
+FROM pg_policies
+WHERE schemaname = 'public';
+
+|schemaname|tablename|policyname|permissive|roles|cmd|qual|with_check|
+|----------|---------|----------|----------|-----|---|----|----------|
+
+--Empty...
+
+
+
+--DB Connects limit
+SELECT datname, datconnlimit
+FROM pg_database
+WHERE datname = 'dvdrental';
+
+|datname  |datconnlimit|
+|---------|------------|
+|dvdrental|-1          |
+
+
+
+--Default privileges:
+SELECT *
+FROM pg_default_acl;
+
+|oid|defaclrole|defaclnamespace|defaclobjtype|defaclacl|
+|---|----------|---------------|-------------|---------|
