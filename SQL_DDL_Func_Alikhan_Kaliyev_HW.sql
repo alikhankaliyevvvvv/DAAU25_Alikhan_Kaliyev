@@ -6,10 +6,10 @@ SELECT
 	DATE_TRUNC('quarter', pay.payment_date)::date    AS quarter_start,
 	EXTRACT(YEAR FROM pay.payment_date)::int         AS year
 FROM public.payment         pay
-JOIN public.rental          rent ON rent.rental_id      = pay.rental_id
-JOIN public.inventory       inv  ON inv.inventory_id    = rent.inventory_id
-JOIN public.film_category   fcat ON fcat.film_id        = inv.film_id
-JOIN public.category        cat  ON cat.category_id     = fcat.category_id
+INNER JOIN public.rental          rent ON rent.rental_id      = pay.rental_id
+INNER JOIN public.inventory       inv  ON inv.inventory_id    = rent.inventory_id
+INNER JOIN public.film_category   fcat ON fcat.film_id        = inv.film_id
+INNER JOIN public.category        cat  ON cat.category_id     = fcat.category_id
 WHERE DATE_TRUNC('quarter', pay.payment_date) = DATE_TRUNC('quarter', CURRENT_DATE)
 GROUP BY 
 	cat.name,
@@ -46,10 +46,10 @@ SELECT cat.name                                         AS category_name,
        DATE_TRUNC('quarter', pay.payment_date)::date    AS quarter_start,
        EXTRACT(YEAR FROM pay.payment_date)::int         AS year
 FROM   public.payment         pay
-JOIN   public.rental          rent ON rent.rental_id      = pay.rental_id
-JOIN   public.inventory       inv  ON inv.inventory_id    = rent.inventory_id
-JOIN   public.film_category   fcat ON fcat.film_id        = inv.film_id
-JOIN   public.category        cat  ON cat.category_id     = fcat.category_id
+INNER JOIN   public.rental          rent ON rent.rental_id      = pay.rental_id
+INNER JOIN   public.inventory       inv  ON inv.inventory_id    = rent.inventory_id
+INNER JOIN   public.film_category   fcat ON fcat.film_id        = inv.film_id
+INNER JOIN   public.category        cat  ON cat.category_id     = fcat.category_id
 WHERE  DATE_TRUNC('quarter', pay.payment_date) = DATE_TRUNC('quarter', p_date)
 GROUP BY 
        cat.name,
@@ -113,12 +113,12 @@ BEGIN
 			       fi.release_year::int                      AS release_year,
 			       COUNT(r.rental_id)::bigint                AS rentals_count
 			FROM   public.rental    r
-			JOIN   public.inventory inv   ON inv.inventory_id  = r.inventory_id
-			JOIN   public.film      fi    ON fi.film_id         = inv.film_id
-			JOIN   public.language  lang  ON lang.language_id   = fi.language_id
-			JOIN   public.customer  cu    ON cu.customer_id      = r.customer_id
-			JOIN   public.address   ad    ON ad.address_id       = cu.address_id
-			JOIN   public.city      ci    ON ci.city_id          = ad.city_id
+			INNER JOIN   public.inventory inv   ON inv.inventory_id  = r.inventory_id
+			INNER JOIN   public.film      fi    ON fi.film_id         = inv.film_id
+			INNER JOIN   public.language  lang  ON lang.language_id   = fi.language_id
+			INNER JOIN   public.customer  cu    ON cu.customer_id      = r.customer_id
+			INNER JOIN   public.address   ad    ON ad.address_id       = cu.address_id
+			INNER JOIN   public.city      ci    ON ci.city_id          = ad.city_id
 			WHERE  ci.country_id = v_country_id
 			GROUP BY 
 			       fi.film_id,
@@ -176,7 +176,7 @@ BEGIN
 		       fi.title                                  AS film_title,
 		       lang.name::text                           AS language_name
 		FROM   public.film      fi
-		JOIN   public.language  lang ON lang.language_id = fi.language_id
+		INNER JOIN   public.language  lang ON lang.language_id = fi.language_id
 		WHERE  fi.title ILIKE p_title_pattern
 	),
 	inv_status AS (
@@ -185,7 +185,7 @@ BEGIN
 		       mf.language_name,
 		       inv.inventory_id
 		FROM   matched_films mf
-		JOIN   public.inventory inv ON inv.film_id = mf.film_id
+		INNER JOIN   public.inventory inv ON inv.film_id = mf.film_id
 		WHERE  NOT EXISTS (
 				SELECT 1
 				FROM   public.rental r
@@ -201,8 +201,8 @@ BEGIN
 		       r.return_date                              AS rental_date,
 		       ROW_NUMBER() OVER (ORDER BY invs.film_title, r.return_date)::int AS rn
 		FROM   inv_status invs
-		JOIN   public.rental r       ON r.inventory_id  = invs.inventory_id
-		JOIN   public.customer cu    ON cu.customer_id   = r.customer_id
+		INNER JOIN   public.rental r       ON r.inventory_id  = invs.inventory_id
+		INNER JOIN   public.customer cu    ON cu.customer_id   = r.customer_id
 		WHERE  r.return_date IS NOT NULL
 	)
 	SELECT lr.rn            AS row_num,
@@ -317,3 +317,229 @@ SELECT public.new_movie('The Blade of Qo''noS');
 SELECT public.new_movie('New Action Film', 2024, 'English');
 SELECT public.new_movie('Romantic Saga', NULL, 'French');
 
+RESET ROLE;
+SELECT current_user; --Task 6 extra validation
+
+-- inventory_in_stock
+-- Returns TRUE if inventory item is available, FALSE otherwise
+CREATE OR REPLACE FUNCTION public.inventory_in_stock(
+	p_inventory_id INTEGER
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_total_rentals INTEGER;
+	v_open_rentals  INTEGER;
+BEGIN
+	SELECT COUNT(r.rental_id)
+	INTO   v_total_rentals
+	FROM   public.rental r
+	WHERE  r.inventory_id = p_inventory_id;
+
+	IF v_total_rentals = 0 THEN
+		RETURN TRUE;
+	END IF;
+
+	SELECT COUNT(r.rental_id)
+	INTO   v_open_rentals
+	FROM   public.rental r
+	WHERE  r.inventory_id = p_inventory_id AND
+	       r.return_date IS NULL;
+
+	RETURN v_open_rentals = 0;
+END;
+$$;
+
+
+-- film_in_stock
+-- Returns inventory IDs for a film in a store that are in stock
+CREATE OR REPLACE FUNCTION public.film_in_stock(
+	p_film_id  INTEGER,
+	p_store_id INTEGER
+)
+RETURNS SETOF INTEGER
+LANGUAGE sql
+AS
+$$
+SELECT inv.inventory_id
+FROM   public.inventory inv
+WHERE  inv.film_id  = p_film_id AND
+       inv.store_id = p_store_id AND
+       public.inventory_in_stock(inv.inventory_id);
+$$;
+
+
+-- film_not_in_stock
+-- Logical negation of film_in_stock, functionally redundant
+CREATE OR REPLACE FUNCTION public.film_not_in_stock(
+	p_film_id  INTEGER,
+	p_store_id INTEGER
+)
+RETURNS SETOF INTEGER
+LANGUAGE sql
+AS
+$$
+SELECT inv.inventory_id
+FROM   public.inventory inv
+WHERE  inv.film_id  = p_film_id AND
+       inv.store_id = p_store_id AND
+       NOT public.inventory_in_stock(inv.inventory_id);
+$$;
+
+
+-- inventory_held_by_customer
+-- Returns customer ID holding the inventory item, NULL if free
+CREATE OR REPLACE FUNCTION public.inventory_held_by_customer(
+	p_inventory_id INTEGER
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_customer_id INTEGER;
+BEGIN
+	SELECT r.customer_id
+	INTO   v_customer_id
+	FROM   public.rental r
+	WHERE  r.inventory_id = p_inventory_id AND
+	       r.return_date IS NULL
+	LIMIT  1;
+
+	RETURN v_customer_id;
+END;
+$$;
+
+
+-- get_customer_balance
+-- Calculates balance based on rentals, overdue fees, replacement cost and payments
+CREATE OR REPLACE FUNCTION public.get_customer_balance(
+	p_customer_id    INTEGER,
+	p_effective_date TIMESTAMPTZ
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	v_rental_fees  NUMERIC := 0;
+	v_overdue_fees NUMERIC := 0;
+	v_payments     NUMERIC := 0;
+BEGIN
+	SELECT COALESCE(SUM(f.rental_rate), 0)
+	INTO   v_rental_fees
+	FROM   public.rental r
+	INNER JOIN public.inventory inv ON inv.inventory_id = r.inventory_id
+	INNER JOIN public.film f ON f.film_id = inv.film_id
+	WHERE  r.customer_id = p_customer_id AND
+	       r.rental_date <= p_effective_date;
+
+	SELECT COALESCE(
+		SUM(
+			CASE
+				WHEN r.return_date IS NULL THEN 0
+				WHEN r.return_date - r.rental_date >
+				     f.rental_duration * INTERVAL '2 day'
+				THEN f.replacement_cost
+				WHEN r.return_date - r.rental_date >
+				     f.rental_duration * INTERVAL '1 day'
+				THEN EXTRACT(
+					DAY FROM (
+						r.return_date - r.rental_date -
+						f.rental_duration * INTERVAL '1 day'
+					)
+				)
+				ELSE 0
+			END
+		), 0
+	)
+	INTO   v_overdue_fees
+	FROM   public.rental r
+	INNER JOIN public.inventory inv ON inv.inventory_id = r.inventory_id
+	INNER JOIN public.film f ON f.film_id = inv.film_id
+	WHERE  r.customer_id = p_customer_id AND
+	       r.rental_date <= p_effective_date;
+
+	SELECT COALESCE(SUM(p.amount), 0)
+	INTO   v_payments
+	FROM   public.payment p
+	WHERE  p.customer_id = p_customer_id AND
+	       p.payment_date <= p_effective_date;
+
+	RETURN v_rental_fees + v_overdue_fees - v_payments;
+END;
+$$;
+
+
+-- last_day
+-- Returns last day of month for given timestamp
+CREATE OR REPLACE FUNCTION public.last_day(
+	p_date TIMESTAMPTZ
+)
+RETURNS DATE
+LANGUAGE sql
+IMMUTABLE
+STRICT
+AS
+$$
+SELECT (date_trunc('month', p_date) + INTERVAL '1 month - 1 day')::DATE;
+$$;
+
+
+-- rewards_report
+-- Returns customers who exceeded purchase count and amount in previous month
+CREATE OR REPLACE FUNCTION public.rewards_report(
+	min_monthly_purchases        INTEGER,
+	min_dollar_amount_purchased NUMERIC
+)
+RETURNS SETOF public.customer
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS
+$$
+DECLARE
+	v_month_start DATE;
+	v_month_end   DATE;
+BEGIN
+	IF min_monthly_purchases <= 0 THEN
+		RAISE EXCEPTION 'Minimum monthly purchases must be > 0';
+	END IF;
+
+	IF min_dollar_amount_purchased <= 0 THEN
+		RAISE EXCEPTION 'Minimum dollar amount must be > 0';
+	END IF;
+
+	v_month_start := date_trunc('month', CURRENT_DATE - INTERVAL '1 month');
+	v_month_end   := v_month_start + INTERVAL '1 month - 1 day';
+
+	RETURN QUERY
+	SELECT c.customer_id,
+	       c.store_id,
+	       c.first_name,
+	       c.last_name,
+	       c.email,
+	       c.address_id,
+	       c.activebool,
+	       c.create_date,
+	       c.last_update,
+	       c.active
+	FROM   public.customer c
+	INNER JOIN public.payment p ON p.customer_id = c.customer_id
+	WHERE  p.payment_date BETWEEN v_month_start AND v_month_end
+	GROUP BY
+	       c.customer_id,
+	       c.store_id,
+	       c.first_name,
+	       c.last_name,
+	       c.email,
+	       c.address_id,
+	       c.activebool,
+	       c.create_date,
+	       c.last_update,
+	       c.active
+	HAVING SUM(p.amount) > min_dollar_amount_purchased AND
+	       COUNT(p.payment_id) > min_monthly_purchases;
+END;
+$$;

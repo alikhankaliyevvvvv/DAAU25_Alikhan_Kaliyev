@@ -49,6 +49,11 @@ HAVING SUM(p.amount) > min_dollar_amount_purchased
 
 3) Film not in stock is same as NOT film_in_stock(...), 
 
+The film_not_in_stock function can be considered useless.
+Its logic is a negation of film_in_stock, which itself relies on the inventory_in_stock function.
+Since stock availability is already is an inventory_in_stock, keeping a separate function for “not in stock” is pointless, just regular creating of a useless function
+Thus, film_not_in_stock can be removed and replaced by using NOT condition to inventory_in_stock or film_in_stock.
+
 
 
 4) * The ‘get_customer_balance’ function describes the business requirements for calculating the client balance. Unfortunately, not all of them are implemented in this function. Try to change function using the requirements from the comments.
