@@ -1,0 +1,89 @@
+1)What operations do the following functions
+film_in_stock(p_film_id, p_store_id):
+gives what items are in stock for the choosen film:
+inventory_id which relates to p_film_id, are in p_store_id, and are in stock usin function inventory_in_stock()
+
+film_not_in_stock(p_film_id, p_store_id)
+same, but for those items that are not in stock
+
+inventory_in_stock(p_inventory_id)
+Checks if chosen item is in stock: if no rentals -> in stock, if exists rentals, but each have return_date -> in stock, if any have NULL -> not in stock, but in use
+
+get_customer_balance(customer_id, date)
+Counts clients balance until specific date, also add ups if rental: adds rental_rate price, expired return for every day +1$, 
+
+inventory_held_by_customer(inventory_id)
+returns for specific item who helds it using NULL value in return_date: rental.return_date IS NULL.
+
+rewards_report(min_purchases, min_amount)
+returns clients that have more purchases in previous month than min_purchases, and spent more than min_amount, realized via tmpCustomer table
+
+last_day(timestamp)
+used in rewards_report, returns last day of the month for the chosen timestamp
+
+
+
+2) Why does ‘rewards_report’ function return 0 rows? Correct and recreate the function, so that it's able to return rows properly.
+why reward report gives 0 output?:
+last_month_start := CURRENT_DATE - '3 month'::interval;
+last_month_start := to_date(... '-01')
+last_month_end := LAST_DAY(last_month_start);
+
+because it takes:
+WHERE DATE(payment_date) BETWEEN 2025-02-01 AND 2025-02-28, while our database have values in first half of 2017. and general fix:
+last_month_start = date_trunc('month', CURRENT_DATE - interval '1 month');
+last_month_end   = (last_month_start + interval '1 month - 1 day');
+i think.
+
+Or more complex is to get rid of dynamic sql:
+RETURN QUERY
+SELECT c.*
+FROM customer c
+JOIN payment p ON p.customer_id = c.customer_id
+WHERE p.payment_date BETWEEN last_month_start AND last_month_end
+GROUP BY c.customer_id
+HAVING SUM(p.amount) > min_dollar_amount_purchased
+   AND COUNT(*) > min_monthly_purchases;
+
+
+
+3) Film not in stock is same as NOT film_in_stock(...), 
+
+The film_not_in_stock function can be considered useless.
+Its logic is a negation of film_in_stock, which itself relies on the inventory_in_stock function.
+Since stock availability is already is an inventory_in_stock, keeping a separate function for “not in stock” is pointless, just regular creating of a useless function
+Thus, film_not_in_stock can be removed and replaced by using NOT condition to inventory_in_stock or film_in_stock.
+
+
+
+4) * The ‘get_customer_balance’ function describes the business requirements for calculating the client balance. Unfortunately, not all of them are implemented in this function. Try to change function using the requirements from the comments.
+change:
+CASE
+    WHEN overdue_days > rental_duration * 2 THEN film.replacement_cost
+    WHEN overdue_days > rental_duration THEN overdue_days * 1
+    ELSE 0
+END
+
+
+
+5) group_concat and _group_concat collects strings to one-line string with , as separator
+
+
+
+6) last_upadted is used in every table in dvdrental to automatically update timestamps
+
+CREATE TRIGGER last_updated BEFORE UPDATE ON actor ...
+CREATE TRIGGER last_updated BEFORE UPDATE ON film ...
+...
+
+
+
+7)What is tmpSQL? 
+tmpSQL := 'INSERT INTO tmpCustomer ...';
+EXECUTE tmpSQL;
+is used to manually input parameters and dates, dynamic sql, for execution
+
+can be also as, if without execute:
+INSERT INTO tmpCustomer (customer_id)
+SELECT ...
+WHERE payment_date BETWEEN last_month_start AND last_month_end;
